@@ -16,6 +16,7 @@
 //	-top N                show the top N most complex functions only
 //	-avg, -avg-short      show the average complexity;
 //	                      the short option prints the value without a label
+//	-centile K            show K-th percentile (1 <= K <= 99)
 //	-ignore REGEX         exclude files matching the given regular expression
 //
 // The output fields for each line are:
@@ -42,6 +43,7 @@ Flags:
     -top N                show the top N most complex functions only
     -avg, -avg-short      show the average complexity over all functions;
                           the short option prints the value without a label
+    -centile K            show K-th percentile (1 <= K <= 99)
     -ignore REGEX         exclude files matching the given regular expression
 
 The output fields for each line are:
@@ -53,6 +55,7 @@ func main() {
 	top := flag.Int("top", -1, "show the top N most complex functions only")
 	avg := flag.Bool("avg", false, "show the average complexity")
 	avgShort := flag.Bool("avg-short", false, "show the average complexity without a label")
+	centile := flag.Int("centile", 0, "show K-th percentile (1 <= K <= 99)")
 	ignore := flag.String("ignore", "", "exclude files matching the given regular expression")
 
 	log.SetFlags(0)
@@ -70,6 +73,12 @@ func main() {
 	printStats(shownStats)
 	if *avg || *avgShort {
 		printAverage(allStats, *avgShort)
+	}
+
+	if *centile > 99 {
+		usage()
+	} else if *centile > 0 {
+		printCentile(allStats.SortAndFilter(-1, 0), *centile)
 	}
 
 	if *over > 0 && len(shownStats) > 0 {
@@ -99,6 +108,11 @@ func printAverage(s gocyclo.Stats, short bool) {
 		fmt.Print("Average: ")
 	}
 	fmt.Printf("%.3g\n", s.AverageComplexity())
+}
+
+func printCentile(s gocyclo.Stats, centile int) {
+	loc := (100-centile)*len(s)/100 - 1
+	fmt.Printf("%d\n", s[loc].Complexity)
 }
 
 func usage() {
