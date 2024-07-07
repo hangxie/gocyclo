@@ -129,7 +129,12 @@ func printCentile(s gocyclo.Stats, centile int, label bool) {
 	indicators := []string{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"}
 	loc := (100-centile)*len(s)/100 - 1
 	if label {
-		fmt.Printf("%d%s-percentile: ", centile, indicators[centile%10])
+		indicator := "th"
+		if centile < 11 || centile > 13 {
+			// 11th not 11st, same to 12 and 13
+			indicator = indicators[centile%10]
+		}
+		fmt.Printf("%d%s-percentile: ", centile, indicator)
 	}
 	fmt.Printf("%d\n", s[loc].Complexity)
 }
